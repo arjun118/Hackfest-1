@@ -1,0 +1,211 @@
+//motion 
+//mopping
+//spraying
+#include <Stepper.h>
+const int stepsPerRevolution = 90 ;
+// change this to fit the number of steps per revolution
+// for your motor
+// initialize the stepper library on pins 8 through 11:
+Stepper myStepper(stepsPerRevolution, 8, 9, 10, 11);
+
+void setup() {
+   // set the speed at 60 rpm:
+   myStepper.setSpeed(5);
+   // initialize the serial port:
+   Serial.begin(9600);
+}
+
+void loop() {
+   // step one revolution in one direction:
+   Serial.println("clockwise");
+   myStepper.step(stepsPerRevolution);
+   delay(500);
+   // step one revolution in the other direction:
+   Serial.println("counterclockwise");
+   myStepper.step(-stepsPerRevolution);
+   delay(500);
+}
+//communication
+
+
+ //22-53 pins digital
+ 
+int motor1=22; // Pin connected to Motor 1
+int motor2=23; // Pin connected to Motor 2
+int motor3=24; // Pin connected to Motor 3
+int motor4=25; // Pin connected to Motor 4
+
+int llir=26; // Pin connected to Outer Left Infrared Sensor
+int lir=27; // Pin connected to Inner Left Infrared Sensor
+int rir=28; // Pin connected to Inner Right Infrared Sensor
+int rrir=29; //Pin connected to Outer Right Infrared Sensor
+
+int LLT=0; // Stores whether we 
+int LT=0;
+int RRT=0; // Stores whether we have to turn right or not
+int RT=0;
+
+void LEFT (void); // Function definition to turn left
+void RIGHT (void); // Function definition to turn right
+void STOP (void); // Function definition to stop moving
+void TYPE1 (void);
+void TYPE2 (void);
+void TYPE3 (void);
+void TYPE4 (void);
+void TYPE5 (void);
+
+void setup()
+{
+  //Pin Setup for motors
+  pinMode(motor1,OUTPUT);  
+  pinMode(motor2,OUTPUT);
+  pinMode(motor3,OUTPUT);
+  pinMode(motor4,OUTPUT);
+
+  //Pin Setup for Infrared Sensors
+  pinMode(llir,INPUT);
+  pinMode(lir,INPUT);
+  pinMode(rrir,INPUT);
+  pinMode(rir,INPUT);
+
+  //Initialize the values in order to start movement
+  digitalWrite(LLT,HIGH);
+  digitalWrite(LT,HIGH);
+  digitalWrite(RRT,HIGH);
+  digitalWrite(RT,HIGH);
+  
+}
+
+void loop() 
+{
+ 
+analogWrite(motor1,255);
+analogWrite(motor2,0);
+analogWrite(motor3,255);
+analogWrite(motor4,0);
+
+while(1)
+{
+  LLT=digitalRead(llir);
+  LT=digitalRead(lir);
+  RRT=digitalRead(rrir);
+  RT=digitalRead(rir);
+  
+  if(LLT==0 && LT==0 && RT==0 && RRT==0)
+  STOP();
+  else if(LLT==1 && LT==0 && RT==0 && RRT==0)
+  TYPE1();
+  else if(LLT==0 && LT==0 && RT==0 && RRT==1)
+  TYPE2();
+  else if(LLT==1 && LT==0 && RT==0 && RRT==1)
+  TYPE3();
+  else if(LLT==1 && LT==1 && RT==0 && RRT==0)
+  TYPE4();
+  else if(LLT==0 && LT==0 && RT==1 && RRT==1)
+  TYPE5();
+  else if(LLT==1 && LT==1 && RT==0 && RRT==1)
+  RIGHT();
+  else if(LLT==1 && LT==0 && RT==1 && RRT==1)
+  LEFT();
+}
+}
+
+void TYPE1(void)
+{
+	//In front of the wall
+	STOP();
+}
+
+void TYPE2(void)
+{
+	//At the head of the bed
+	STOP();
+}
+void TYPE3(void)
+{
+	//At the foot of the bed
+	STOP();
+}
+void TYPE4(void)
+{
+	//Parallel wall on the right
+}
+void TYPE5(void)
+{
+	//Parallel wall on the left
+}
+void LEFT (void)
+{
+   analogWrite(motor3,0);
+   analogWrite(motor4,30);
+   
+   
+   while(LT==0)
+   {
+    LT=digitalRead(lir);
+    RT=digitalRead(rir);
+    LLT=digitalRead(llir);
+    RRT=digitalRead(rrir);
+    if(LLT==1 && RT==1 && RRT==1)
+    {
+      int lPrev=LT;
+      int rPrev=RT;
+      int llPrev=LLT;
+      int rrPrev=RRT;
+      STOP();
+      while((lPrev==LT)&&(rPrev==RT) && llPrev==LLT && rrPrev==RRT)
+      {
+         LT=digitalRead(lir);
+         RT=digitalRead(rir);
+         LLT=digitalRead(llir);
+         RRT=digitalRead(rrir);
+      }
+    }
+    analogWrite(motor1,255);
+    analogWrite(motor2,0); 
+   }
+   analogWrite(motor3,255);
+   analogWrite(motor4,0);
+}
+
+void RIGHT (void)
+{
+   analogWrite(motor1,0);
+   analogWrite(motor2,30);
+
+   while(RT==0)
+   {
+    LT=digitalRead(lir);
+    RT=digitalRead(rir);
+    LLT=digitalRead(llir);
+    RRT=digitalRead(rrir);
+    if(LLT==1 && LT==1 && RRT==1)
+    {
+      int lPrev=LT;
+      int rPrev=RT;
+      int llPrev=LLT;
+      int rrPrev=RRT;
+	  STOP();
+      while((lPrev==LT)&&(rPrev==RT) && llPrev==LLT && rrPrev==RRT)
+      {
+         LT=digitalRead(lir);
+         RT=digitalRead(rir);
+         LLT=digitalRead(llir);
+         RRT=digitalRead(rrir);
+      }
+    }
+    analogWrite(motor3,255);
+    analogWrite(motor4,0);
+    }
+   analogWrite(motor1,255);
+   analogWrite(motor2,0);
+}
+void STOP (void)
+{
+analogWrite(motor1,0);
+analogWrite(motor2,0);
+analogWrite(motor3,0);
+analogWrite(motor4,0);
+  
+}
+
