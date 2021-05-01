@@ -1,26 +1,5 @@
-//motion 
-//mopping
-//spraying
-
-
-void setup() {
-   
-}
-
-void loop() { //TYPE 2 & TYPE 3
-   // step one revolution in one direction:
-   myStepper.step(stepsPerRevolution);
-   delay(500);
-   // step one revolution in the other direction:
-   myStepper.step(-stepsPerRevolution);
-   delay(500);
-}
-//communication
-
-
- //22-53 pins digital
 #include <Stepper.h>
-const int numberOfSteps = 50 ;
+const int numberOfSteps = 50;
 // change this to fit the number of steps per revolution
 // for your motor
 // initialize the stepper library on pins 8 through 11:
@@ -54,6 +33,10 @@ void TYPE5 (void);
 void SPRAY1 (void);
 void SPRAY2 (void);
 void START (void);
+
+const int TrigPin = 33; // Trigger Pin of Ultrasonic Sensor
+const int EchoPin = 12; // Echo Pin of Ultrasonic Sensor
+
 void setup()
 {
   //Pin Setup for motors
@@ -78,23 +61,39 @@ void setup()
   myStepper1.setSpeed(30);
   myStepper2.setSpeed(30);
   
+  pinMode(TrigPin, OUTPUT);
+  pinMode(EchoPin, INPUT);
+   
 }
 
 void loop() 
 {
- 
-analogWrite(motor1,255);
-analogWrite(motor2,255);
-analogWrite(motor3,255);
-analogWrite(motor4,255);
+
+   long duration,distance;
+   
+   
+	analogWrite(motor1,255);
+	analogWrite(motor2,255);
+	analogWrite(motor3,255);
+	analogWrite(motor4,255);
 
 while(1)
 {
+	digitalWrite(TrigPin, LOW);
+	delayMicroseconds(2);
+	digitalWrite(TrigPin, HIGH);
+	delayMicroseconds(10);
+	digitalWrite(TrigPin, LOW);
+  
+	duration = pulseIn(EchoPin, HIGH);
+	distance = duration*0.034/2;
+	delay(100); 
   LLT=digitalRead(llir);
   LT=digitalRead(lir);
   RRT=digitalRead(rrir);
   RT=digitalRead(rir);
-  
+  if(distance<=10)
+  STOP();
   if(LLT==0 && LT==0 && RT==0 && RRT==0)
   STOP();
   else if(LLT==1 && LT==0 && RT==0 && RRT==0)
@@ -114,16 +113,15 @@ while(1)
 }
 }
 
-void TYPE1(void)
-{
-	//In front of the wall
+void TYPE1(void)//In front of the wall
+{	
 	STOP();
 	SPRAY1();
+	START();
 }
 
-void TYPE2(void)
+void TYPE2(void)//At the head of the bed
 {
-	//At the head of the bed
 	STOP();
 	myStepper1.step(-numberOfSteps);//Vertical motor is rotated anti-clockwise
     delay(500);
@@ -131,9 +129,8 @@ void TYPE2(void)
     delay(500);
     SPRAY2(); //Calls Spray2 function	
 }
-void TYPE3(void)
+void TYPE3(void)//At the foot of the bed
 {
-	//At the foot of the bed
 	STOP();
 	myStepper1.step(-numberOfSteps);//Vertical motor is rotated anti-clockwise
     delay(500);
@@ -141,19 +138,17 @@ void TYPE3(void)
     delay(500);
     SPRAY2(); //Calls Spray2 function	
 }
-void TYPE4(void)
+void TYPE4(void)//Parallel wall on the right
 {
-	//Parallel wall on the right
 	myStepper2.step(numberOfSteps);//Horizontal motor is rotated clockwise
     delay(500);
-    SPRAY2();
+    SPRAY2();//Calls Spray2 function
 }
-void TYPE5(void)
+void TYPE5(void)//Parallel wall on the left
 {
-	//Parallel wall on the left
 	myStepper2.step(-numberOfSteps);//Horizontal motor is rotated clockwise
     delay(500);
-    SPRAY2();
+    SPRAY2();//Calls Spray2 function
 }
 
 void SPRAY1(void)
@@ -176,7 +171,7 @@ void SPRAY2(void)
 		RT=digitalRead(rir);
 		LLT=digitalRead(llir);
 		RRT=digitalRead(rrir);
-		
+		START();
 	}
 	analogWrite(spraymotor,0);
 }
@@ -184,9 +179,7 @@ void SPRAY2(void)
 void LEFT(void)
 {
    analogWrite(motor3,0);
-   analogWrite(motor4,30);
-   
-   
+   analogWrite(motor4,30);   
    while(LT==0)
    {
     LT=digitalRead(lir);
