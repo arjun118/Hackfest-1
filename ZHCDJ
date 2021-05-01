@@ -1,27 +1,17 @@
 //motion 
 //mopping
 //spraying
-#include <Stepper.h>
-const int stepsPerRevolution = 90 ;
-// change this to fit the number of steps per revolution
-// for your motor
-// initialize the stepper library on pins 8 through 11:
-Stepper myStepper(stepsPerRevolution, 8, 9, 10, 11);
+
 
 void setup() {
-   // set the speed at 60 rpm:
-   myStepper.setSpeed(5);
-   // initialize the serial port:
-   Serial.begin(9600);
+   
 }
 
-void loop() {
+void loop() { //TYPE 2 & TYPE 3
    // step one revolution in one direction:
-   Serial.println("clockwise");
    myStepper.step(stepsPerRevolution);
    delay(500);
    // step one revolution in the other direction:
-   Serial.println("counterclockwise");
    myStepper.step(-stepsPerRevolution);
    delay(500);
 }
@@ -29,11 +19,19 @@ void loop() {
 
 
  //22-53 pins digital
- 
+#include <Stepper.h>
+const int numberOfSteps = 50 ;
+// change this to fit the number of steps per revolution
+// for your motor
+// initialize the stepper library on pins 8 through 11:
+Stepper myStepper1(stepsPerRevolution, 8,9,10,11); 
+Stepper myStepper2(stepsPerRevolution, 4,5,6,7); 
+
 int motor1=22; // Pin connected to Motor 1
 int motor2=23; // Pin connected to Motor 2
 int motor3=24; // Pin connected to Motor 3
 int motor4=25; // Pin connected to Motor 4
+int spraymotor=30; // Pin connected to Spray Motor
 
 int llir=26; // Pin connected to Outer Left Infrared Sensor
 int lir=27; // Pin connected to Inner Left Infrared Sensor
@@ -53,7 +51,9 @@ void TYPE2 (void);
 void TYPE3 (void);
 void TYPE4 (void);
 void TYPE5 (void);
-
+void SPRAY1 (void);
+void SPRAY2 (void);
+void START (void);
 void setup()
 {
   //Pin Setup for motors
@@ -61,6 +61,7 @@ void setup()
   pinMode(motor2,OUTPUT);
   pinMode(motor3,OUTPUT);
   pinMode(motor4,OUTPUT);
+  pinMode(spraymotor,OUTPUT);
 
   //Pin Setup for Infrared Sensors
   pinMode(llir,INPUT);
@@ -74,15 +75,18 @@ void setup()
   digitalWrite(RRT,HIGH);
   digitalWrite(RT,HIGH);
   
+  myStepper1.setSpeed(30);
+  myStepper2.setSpeed(30);
+  
 }
 
 void loop() 
 {
  
 analogWrite(motor1,255);
-analogWrite(motor2,0);
+analogWrite(motor2,255);
 analogWrite(motor3,255);
-analogWrite(motor4,0);
+analogWrite(motor4,255);
 
 while(1)
 {
@@ -114,27 +118,70 @@ void TYPE1(void)
 {
 	//In front of the wall
 	STOP();
+	SPRAY1();
 }
 
 void TYPE2(void)
 {
 	//At the head of the bed
 	STOP();
+	myStepper1.step(-numberOfSteps);//Vertical motor is rotated anti-clockwise
+    delay(500);
+    myStepper2.step(numberOfSteps);//Horizontal motor is rotated clockwise
+    delay(500);
+    SPRAY2(); //Calls Spray2 function	
 }
 void TYPE3(void)
 {
 	//At the foot of the bed
 	STOP();
+	myStepper1.step(-numberOfSteps);//Vertical motor is rotated anti-clockwise
+    delay(500);
+    myStepper2.step(numberOfSteps);//Horizontal motor is rotated clockwise
+    delay(500);
+    SPRAY2(); //Calls Spray2 function	
 }
 void TYPE4(void)
 {
 	//Parallel wall on the right
+	myStepper2.step(numberOfSteps);//Horizontal motor is rotated clockwise
+    delay(500);
+    SPRAY2();
 }
 void TYPE5(void)
 {
 	//Parallel wall on the left
+	myStepper2.step(-numberOfSteps);//Horizontal motor is rotated clockwise
+    delay(500);
+    SPRAY2();
 }
-void LEFT (void)
+
+void SPRAY1(void)
+{
+	analogWrite(spraymotor,255);
+	delay(5000);
+	analogWrite(spraymotor,0);
+}
+
+void SPRAY2(void)
+{
+	analogWrite(spraymotor,255);
+	int lPrev=0;
+    int rPrev=0;
+    int llPrev=0;
+    int rrPrev=0;
+	while((lPrev!=LT || rPrev!=RT) && llPrev!=LLT && rrPrev!=RRT)
+	{
+		LT=digitalRead(lir);
+		RT=digitalRead(rir);
+		LLT=digitalRead(llir);
+		RRT=digitalRead(rrir);
+		
+	}
+	analogWrite(spraymotor,0);
+}
+
+void LEFT(void)
 {
    analogWrite(motor3,0);
    analogWrite(motor4,30);
@@ -192,6 +239,7 @@ void RIGHT (void)
          RT=digitalRead(rir);
          LLT=digitalRead(llir);
          RRT=digitalRead(rrir);
+         
       }
     }
     analogWrite(motor3,255);
@@ -208,4 +256,11 @@ analogWrite(motor3,0);
 analogWrite(motor4,0);
   
 }
-
+void START (void)
+{
+analogWrite(motor1,255);
+analogWrite(motor2,255);
+analogWrite(motor3,255);
+analogWrite(motor4,255);
+  
+}
