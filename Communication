@@ -1,18 +1,18 @@
-#include "SIM900.h"
-#include <SoftwareSerial.h>
-#include "call.h"
+#include "SIM900.h" //Includes library files from SIM900
+#include <SoftwareSerial.h> //Includes library files from SoftwareSerial
+#include "call.h" //Includes library files from call
 
-#define ACTIVE LOW
+#define ACTIVE LOW  
 
 const int ledPin =  13;      // the number of the LED pin
 
-CallGSM call;
+CallGSM call;             
 boolean started=false;
 int buttonState = 31;    
 const int buttonPin = 32;     // the number of the pushbutton pin
 boolean calling = false;
 
-void setup()
+void setup() //Setting up the pins for output and input
 {
   
   Serial.begin(9600);
